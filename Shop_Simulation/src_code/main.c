@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <ncurses.h>
+#include <strings.h>
 #include "inventory.h"
 #include "ui.h"
 
@@ -22,8 +23,14 @@ int main(void) {
         mvprintw(0, 0, "Welcome to Shop Simulation - Customer #%d", customer++);
         mvprintw(2, 0, "Press any key to start or 'q' to quit.");
         refresh();
-        int ch = getch();
-        if (ch == 'q' || ch == 'Q') break;
+        
+        char input[10];
+        echo();
+        mvprintw(2, 0, "Press Enter to continue or type 'exit' to quit: ");
+        getnstr(input, sizeof(input) - 1);
+        noecho();
+
+        if (strcasecmp(input, "exit") == 0) break;
 
         int quantities[ITEM_COUNT] = {0};
         if (ui_get_order(items, quantities)) {

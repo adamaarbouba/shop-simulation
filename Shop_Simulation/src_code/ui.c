@@ -20,7 +20,7 @@ void ui_show_inventory(Item items[]) {
         mvprintw(i + 2, 2, "%d. %-8s : %2d in stock - $%.2f each",
                  i + 1, items[i].name, items[i].stock, items[i].price);
     }
-    mvprintw(ITEM_COUNT + 4, 0, "Enter quantities or 'q' to cancel.\n");
+    mvprintw(ITEM_COUNT + 4, 0, "Enter quantities or 'exit' to cancel.\n");
     refresh();
 }
 
@@ -41,7 +41,7 @@ int ui_get_order(Item items[], int quantities[]) {
         getnstr(input, 15);
         noecho();
 
-        if (input[0] == 'q' || input[0] == 'Q') {
+        if (strcasecmp(input, "exit") == 0) {
             return 1;  
         }
 
