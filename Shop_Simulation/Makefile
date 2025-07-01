@@ -1,26 +1,21 @@
-# Compiler and flags
 CC = gcc
 CFLAGS = -Wall -Wextra -IHeaders
+LDFLAGS = -lncurses
 
-# Directories
 SRC_DIR = src_code
 BIN_DIR = App
 
-# Source files and target
-SRCS = $(SRC_DIR)/main.c $(SRC_DIR)/input.c $(SRC_DIR)/inventory.c $(SRC_DIR)/utils.c
+SRCS = $(SRC_DIR)/main.c $(SRC_DIR)/input.c $(SRC_DIR)/inventory.c $(SRC_DIR)/utils.c $(SRC_DIR)/ui.c
 TARGET = $(BIN_DIR)/shop
 
-# Default target
 all: $(TARGET)
 
 $(TARGET): $(SRCS)
 	@mkdir -p $(BIN_DIR)
-	$(CC) $(CFLAGS) -o $(TARGET) $(SRCS)
+	$(CC) $(CFLAGS) -o $(TARGET) $(SRCS) $(LDFLAGS)
 
-# Clean build
 clean:
-	rm -f $(BIN_DIR)/shop $(BIN_DIR)/shop.exe
+	rm -f $(TARGET) $(BIN_DIR)/shop.exe
 
-# Run the app
 run: all
 	./$(TARGET)

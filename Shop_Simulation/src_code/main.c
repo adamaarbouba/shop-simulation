@@ -1,10 +1,10 @@
-#include <stdio.h> 
-#include <string.h>
+#include <stdio.h>
 #include "inventory.h"
-#include "input.h"
+#include "ui.h"
 
-int main() {
+int main(void) {
     randomize();
+
     Item items[ITEM_COUNT] = {
         {"Pizza", 7.50f, get_random_number(0, 10)},
         {"Orange", 1.20f, get_random_number(0, 10)},
@@ -12,76 +12,71 @@ int main() {
         {"Bread", 2.10f, get_random_number(0, 10)},
         {"Cheese", 4.25f, get_random_number(0, 10)}
     };
+
+    ui_init();
+
     int customer = 1;
     while (1) {
-        char shopChoice[16];
-        printf("\nWelcome to the shop! Type 'exit' to leave or press Enter to continue: ");
-        if (!fgets(shopChoice, sizeof(shopChoice), stdin)) break;
-        shopChoice[strcspn(shopChoice, "\n")] = 0;
-        if (!strcasecmp_custom(shopChoice, "exit")) break;
-
-        printf("\n=== Customer #%d ===\n", customer++);
-        show_inventory(items);
+        clear();
+        mvprintw(0, 0, "Welcome to Shop Simulation - Customer #%d", customer++);
+        mvprintw(2, 0, "Press any key to start or 'q' to quit.");
+        refresh();
+        int ch = getch();
+        if (ch == 'q' || ch == 'Q') break;
 
         int quantities[ITEM_COUNT] = {0};
-        float total = 0.0f;
-
-        for (int i = 0; i < ITEM_COUNT; i++) {
-            if (items[i].stock == 0) continue;
-            char prompt[128];
-            snprintf(prompt, sizeof(prompt), "How many %s? (0 to skip, or type 'exit' to cancel): ", items[i].name);
-            int qty = safe_int_input(prompt, items[i].stock);
-            if (qty == -1) {
-                printf("Order cancelled by customer.\n");
-                total = 0;
-                break;
-            }
-            quantities[i] = qty;
-            total += qty * items[i].price;
-        }
-
-        if (total <= 0.0f) {
-            printf("You didn't buy anything.\n");
+        if (ui_get_order(items, quantities)) {
+            mvprintw(20, 0, "Order cancelled.");
+            getch();
             continue;
         }
 
-        printf("\nTotal: $%.2f\n", total);
+        float total = 0.0f;
+        for (int i = 0; i < ITEM_COUNT; i++) {
+            total += quantities[i] * items[i].price;
+        }
+        if (total == 0.0f) {
+            mvprintw(20, 0, "No items bought.");
+            getch();
+            continue;
+        }
 
         float paid = 0.0f;
         while (1) {
-            paid = safe_float_input("\nEnter payment: $");
-            if (paid < total) {
-                printf("Not enough money! You still owe $%.2f\n", total - paid);
+            char paystr[20];
+            echo();
+            mvprintw(20, 0, "Total: $%.2f, Enter payment: ", total);
+            getnstr(paystr, sizeof(paystr) - 1);
+            noecho();
+            if (sscanf(paystr, "%f", &paid) != 1 || paid < total) {
+                mvprintw(21, 0, "Insufficient payment, try again.");
+                clrtoeol();
                 continue;
             }
             break;
         }
-        printf("Change: $%.2f\n", paid - total);
+
+        float change = paid - total;
+
         for (int i = 0; i < ITEM_COUNT; i++) {
             items[i].stock -= quantities[i];
         }
-        printf("\n--- Receipt ---\n");
-        for (int i = 0; i < ITEM_COUNT; i++) {
-            if (quantities[i]) {
-                printf("%-8s x %2d = $%.2f\n", items[i].name, quantities[i], items[i].price * quantities[i]);
-            }
-        }
+
+        ui_show_receipt(items, quantities, total, change);
+
         int items_left = 0;
         for (int i = 0; i < ITEM_COUNT; i++) {
             items_left += items[i].stock;
         }
         if (items_left == 0) {
-            printf("Store is out of stock! Closing.\n");
+            mvprintw(22, 0, "Store is out of stock! Closing.");
+            getch();
             break;
         }
-        char choice[16];
-        printf("\nNext customer? (y/n/exit): ");
-        if (!fgets(choice, sizeof(choice), stdin)) break;
-        choice[strcspn(choice, "\n")] = 0;
-        if (choice[0] == 'n' || choice[0] == 'N' || !strcasecmp_custom(choice, "exit")) {
-            printf("Store closed.\n");
-            break;
-        }
+
+        if (!ui_ask_continue()) break;
     }
+
+    ui_cleanup();
     return 0;
 }
