@@ -106,7 +106,7 @@ int main() {
         float total = 0.0f;
         for (int i = 0; i < ITEM_COUNT; i++) {
             if (items[i].stock == 0) continue;
-            char prompt[64];
+            char prompt[128];
             snprintf(prompt, sizeof(prompt), "How many %s? (0 to skip, or type 'exit' to cancel): ", items[i].name);
             int qty = safe_int_input(prompt, items[i].stock);
             if (qty == -1) {
