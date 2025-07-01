@@ -27,6 +27,47 @@ void show_inventory(Item items[]) {
     printf("------------------------\n");
 }
 
+int safe_int_input(const char *prompt, int max) {
+    char line[64];
+    int value = 0;
+    while (1) {
+        printf("%s", prompt);
+        if (!fgets(line, sizeof(line), stdin)) {
+            printf("Input error. Try again.\n");
+            continue;
+        }
+        if (line[0] == '\n') {
+            return 0;
+        }
+        if (sscanf(line, "%d", &value) != 1 || value < 0) {
+            printf("Please enter a valid non-negative number.\n");
+            continue;
+        }
+        if (value > max) {
+            printf("Only %d available. Setting quantity to %d.\n", max, max);
+            value = max;
+        }
+        return value;
+    }
+}
+
+float safe_float_input(const char *prompt) {
+    char line[64];
+    float value = 0.0f;
+    while (1) {
+        printf("%s", prompt);
+        if (!fgets(line, sizeof(line), stdin)) {
+            printf("Input error. Try again.\n");
+            continue;
+        }
+        if (sscanf(line, "%f", &value) != 1 || value < 0.0f) {
+            printf("Please enter a valid positive amount.\n");
+            continue;
+        }
+        return value;
+    }
+}
+
 int main() {
     randomize();
 
@@ -46,36 +87,32 @@ int main() {
         int quantities[ITEM_COUNT] = {0};
         float total = 0.0f;
 
-       
         for (int i = 0; i < ITEM_COUNT; i++) {
             if (items[i].stock == 0) continue;
 
-            printf("How many %s? (0 to skip): ", items[i].name);
-            int qty = 0;
-            scanf("%d", &qty);
-
-            if (qty > items[i].stock) qty = items[i].stock;
+            char prompt[64];
+            snprintf(prompt, sizeof(prompt), "How many %s? (0 to skip): ", items[i].name);
+            int qty = safe_int_input(prompt, items[i].stock);
             quantities[i] = qty;
             total += qty * items[i].price;
         }
 
-        
-        float paid = 0.0f;
-        if (total > 0) {
-            printf("\nTotal: $%.2f\n", total);
-            printf("Enter payment: $");
-            scanf("%f", &paid);
-
-            if (paid < total) {
-                printf("Not enough money! Transaction cancelled.\n");
-                continue;
-            }
-
-            printf("Change: $%.2f\n", paid - total);
-        } else {
+        if (total <= 0.0f) {
             printf("You didn't buy anything.\n");
             continue;
         }
+
+        float paid = 0.0f;
+        while (1) {
+            paid = safe_float_input("\nEnter payment: $");
+            if (paid < total) {
+                printf("Not enough money! You still owe $%.2f\n", total - paid);
+                continue;
+            }
+            break;
+        }
+
+        printf("Change: $%.2f\n", paid - total);
 
         for (int i = 0; i < ITEM_COUNT; i++) {
             items[i].stock -= quantities[i];
@@ -100,6 +137,8 @@ int main() {
         char choice;
         printf("\nNext customer? (y/n): ");
         scanf(" %c", &choice);
+        while (getchar() != '\n');
+
         if (choice != 'y' && choice != 'Y') {
             printf("Store closed.\n");
             break;
