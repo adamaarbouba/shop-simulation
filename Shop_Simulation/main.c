@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <stdio.h> 
 #include <string.h>
 #include "inventory.h"
 #include "input.h"
@@ -39,10 +39,14 @@ int main() {
             quantities[i] = qty;
             total += qty * items[i].price;
         }
+
         if (total <= 0.0f) {
             printf("You didn't buy anything.\n");
             continue;
         }
+
+        printf("\nTotal: $%.2f\n", total);
+
         float paid = 0.0f;
         while (1) {
             paid = safe_float_input("\nEnter payment: $");
