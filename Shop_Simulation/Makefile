@@ -16,6 +16,6 @@ $(TARGET): $(SRCS)
 
 clean:
 	rm -f $(TARGET) $(BIN_DIR)/shop.exe
-
+	rm -rf $(BIN_DIR)
 run: all
 	./$(TARGET)
